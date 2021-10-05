@@ -1,0 +1,17 @@
+---
+channels_5G: yes      # 如果yes 的话，抓取影响5G Rogue AP（Key - 不能修改，以下同）
+channels_24G: no      # 如果yes 的话，抓取影响2.4G Rogue AP
+rssi_min_dBm: -80     # 设置最低 RSSI，大于该数值的 Rogue AP 才抓取
+devices:              # 下方设置wlc 具体访问信息（Key - 不能修改）
+  wlc1:               # 自定义一个WLC的名称，和其它的 WLC 名称不同即可，可设置为：client_name_location
+    host: localhost   # host是 wlc 的IP地址、DNS域名
+    username: admin   # username
+    password: admin   # password
+    port: 22          # 默认使用SSH获取数据，设置其SSH 访问端口，默认是 22
+    capture: yes      # 设置yes的话，即表示抓取该WLC数据；设置no，软件不抓取该wlc数据
+  wlc2:
+    host: localhost
+    username: admin
+    password: admin
+    port: 10000
+    capture: yes

@@ -5,6 +5,7 @@ import yaml
 from netmiko import ConnectHandler
 from ttp import ttp
 import re
+import click
 
 CMD_ROGUE_SUMMARY = "show wireless wps rogue ap summary"
 CMD_LIST = ["show ap dot11 5ghz summary", "show ap dot11 24ghz load-info", "show ap dot11 5ghz load-info",
@@ -56,16 +57,59 @@ def channel_5G_24G(data):
     return channel
 
 
-# @click.command()
-# @click.option("--ip", default="1.1.1.1", prompt="请输入访问C9800无线控制器的IP地址：", help="IP of C9800.")
-# @click.option("--name", default="username", prompt="请输入访问C9800无线控制器的用户名：",
-#               help="username of C9800.")
-# @click.option("--password", default="password", prompt="请输入访问C9800无线控制器的密码：",
-#               help="password of C9800.")
-# def main(ip, name, password):
-# print(f'输入的IP: {ip}, username: {name}, password: {password}')
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    if not ctx.invoked_subcommand:
+        ctx.invoke(run)
 
-def main():
+
+@click.command()
+@click.option("--client", prompt="请输入访问 WLC 无线控制器的名称 - client_name_location：", help="Client_name_location of WLC.")
+@click.option("--host", prompt="请输入访问 WLC 无线控制器的IP地址：", help="host or IP of WLC.")
+@click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名：", help="username of WLC.")
+@click.option("--password", prompt="请输入访问 WLC 无线控制器的密码：", help="password of WLC.")
+@click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port：", help="SSH port of WLC.")
+@click.option('--channel', type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入分析的频段：")
+@click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值：", help="Min RSSI of Rogue AP.")
+def init(client, host, username, password, port, channel, rssi):
+    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init"""
+    _wlc = {}
+    channels_5G = False
+    channels_24G = False
+    if channel == "all":
+        channels_5G = True
+        channels_24G = True
+    elif channel == "5G":
+        channels_5G = True
+    elif channel == "2.4G":
+        channels_24G = True
+
+    _wlc[client] = {
+        "host": host,
+        "username": username,
+        "password": password,
+        "port": port,
+        "capture": True
+    }
+    _config = {
+            "channels_5G": channels_5G,
+            "channels_24G": channels_24G,
+            "rssi_min_dBm": rssi,
+            "devices": _wlc
+        }
+    # print(_config)
+    with open(f'config.yml', "w") as file:
+        yaml.dump(_config, file)
+    return
+
+
+@click.command()
+def run():
+    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
+    if not os.path.isfile('config.yml'):
+        print("Please run it first: rogue init")
+
     now = datetime.now()
     now_time = now.strftime("%Y%m%d-%H%M%S")
 
@@ -141,5 +185,8 @@ def main():
             print(f"请检查子目录-{FOLDER} 下，检查show命令输出文件是否生成，文件名中时间戳是否正确。")
 
 
+cli.add_command(init)
+cli.add_command(run)
+
 if __name__ == '__main__':
-    main()
+    cli()

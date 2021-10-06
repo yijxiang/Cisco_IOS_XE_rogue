@@ -2,3 +2,4 @@ netmiko==3.4.0
 ttp==0.8.0
 PyYAML==5.4.1
 pyinstaller==4.5.1
+click~=8.0.1

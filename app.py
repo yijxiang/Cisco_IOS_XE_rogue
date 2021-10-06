@@ -109,6 +109,7 @@ def run():
     """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
     if not os.path.isfile('config.yml'):
         print("Please run it first: rogue init")
+        return
 
     now = datetime.now()
     now_time = now.strftime("%Y%m%d-%H%M%S")

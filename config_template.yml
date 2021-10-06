@@ -15,3 +15,8 @@ devices:              # 下方设置wlc 具体访问信息（Key - 不能修改�
     password: admin
     port: 10000
     capture: yes
+commands:             # 自定义需要抓取的命令列表，默认下述命令将一起抓取并保存
+ - show ap dot11 5ghz cleanair air-quality summary
+ - show ap dot11 24ghz load-info
+ - show ap dot11 5ghz load-info
+ - show ap dot11 24ghz cleanair air-quality summary

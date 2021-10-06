@@ -1,15 +1,16 @@
 import os
+import re
 from datetime import datetime
 
+import click
 import yaml
 from netmiko import ConnectHandler
 from ttp import ttp
-import re
-import click
 
 CMD_ROGUE_SUMMARY = "show wireless wps rogue ap summary"
-CMD_LIST = ["show ap dot11 5ghz summary", "show ap dot11 24ghz load-info", "show ap dot11 5ghz load-info",
-            "show wireless wps rogue ap summary"]
+CMD_LIST = ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 24ghz load-info",
+            "show ap dot11 5ghz load-info",
+            "show ap dot11 24ghz cleanair air-quality summary"]
 CMD_ROGUE_DETAIL = "show wireless wps rogue ap detailed"
 config = {}
 
@@ -96,7 +97,8 @@ def init(client, host, username, password, port, channel, rssi):
             "channels_5G": channels_5G,
             "channels_24G": channels_24G,
             "rssi_min_dBm": rssi,
-            "devices": _wlc
+            "devices": _wlc,
+            "commands": CMD_LIST
         }
     # print(_config)
     with open(f'config.yml', "w") as file:
@@ -108,7 +110,7 @@ def init(client, host, username, password, port, channel, rssi):
 def run():
     """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
     if not os.path.isfile('config.yml'):
-        print("Please run it first: rogue init")
+        print("config.yml 不存在，please run it first: rogue init")
         return
 
     now = datetime.now()
@@ -119,7 +121,7 @@ def run():
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     if not config.get("channels_5G") and not config.get("channels_5G"):
-        print("至少需要一个频段：5G、2.4G。在 config.yml 中设置 channels_5G、channels_24G，其中一个是 yes")
+        print("至少需要一个频段：5G、2.4G。在 config.yml 中设置 channels_5G、channels_24G，其中一个是 yes or true")
         return
     if not isinstance(config.get("rssi_min_dBm"), int):
         print("rssi_min_dBm 需要设置为数值，比如：-80 ")
@@ -180,6 +182,16 @@ def run():
             else:
                 print("rogue ap detail file no need, write cancel")
                 # print(_detail_str)
+
+            # run commands capture
+            for i in config.get("commands", []):
+                _data = net_connect.send_command(i)
+                if config.get("write_file", True):
+                    with open(f'{_folder}/{i}_{now_time}.txt', "w") as file:
+                        file.write(_data)
+                else:
+                    print("commands file no need, write cancel")
+                    # print(_detail_str)
 
             print(
                 f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')

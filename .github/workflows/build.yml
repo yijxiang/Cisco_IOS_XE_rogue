@@ -1,4 +1,4 @@
-name: Package the Python App. using Pyinstalled
+name: 自动化打包软件
 
 on:
   push:

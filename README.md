@@ -7,7 +7,7 @@
 
 ### 工具软件使用方法
 
-自右侧栏 releases 下载最新的软件，目前可以支持 MAC OS、windows 2种格式。
+自 github 右侧栏 releases 下载最新的软件，目前可以支持 MAC OS、windows 2种格式。
 - 下载软件至本地，windows系统请下载 *rogue.exe*，MAC OS 则下载 *rogue.zip*；
 - 在同一个目录中，参考 config_template.yml 文件说明，生成自己的 config.yml 文件，该文件也可以通过命令 rogue init 交互式生成；
     在 config.yml 文件中，还可以自定义需要抓取的命令清单，可以在 commands 下方自行增加。
@@ -67,7 +67,7 @@ For WLC - test localhost, rogue AP count in channels 5G/2.4G: 22/347
 
 ###  其他有帮助的信息收集
 
-发送抓取文件同时，请登录至 WLC CLI下，获取下述命令输出，注意提前设置 terminal length 0：
+发送抓取文件同时，请登录至 WLC CLI下，获取下述命令输出，注意提前设置 terminal length 0、terminal width 511：
 
 - show tech wireless： 针对C9800 IOS XE设备
 - 

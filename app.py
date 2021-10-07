@@ -5,7 +5,7 @@ from datetime import datetime
 import click
 import yaml
 from netmiko import ConnectHandler
-from ttp import ttp
+
 
 CMD_ROGUE_SUMMARY = "show wireless wps rogue ap summary"
 CMD_LIST = ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 24ghz load-info",
@@ -18,14 +18,6 @@ config = {}
 FOLDER = "output"
 if not os.path.exists(FOLDER):
     os.makedirs(FOLDER)
-
-
-def show_wireless_wps_rogue_ap_summary(data):
-    ttp_template = """{{rogue_ap_mac}} {{ignore}} {{ignore}} {{ignore}} {{ignore}} {{last_heard_date}} {{last_heard_time}} {{ap_mac}} {{rssi| to_int}} {{channel | to_int}}
-    """
-    parser = ttp(data=data, template=ttp_template)
-    parser.parse()
-    return parser.result()[0][0]
 
 
 def show_wireless_wps_rogue_ap_summary_regex(data):
@@ -66,13 +58,13 @@ def cli(ctx):
 
 
 @click.command()
-@click.option("--client", prompt="请输入访问 WLC 无线控制器的名称 - client_name_location：", help="Client_name_location of WLC.")
-@click.option("--host", prompt="请输入访问 WLC 无线控制器的IP地址：", help="host or IP of WLC.")
-@click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名：", help="username of WLC.")
-@click.option("--password", prompt="请输入访问 WLC 无线控制器的密码：", help="password of WLC.")
-@click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port：", help="SSH port of WLC.")
-@click.option('--channel', type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入分析的频段：")
-@click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值：", help="Min RSSI of Rogue AP.")
+@click.option("--client", prompt="请输入访问 WLC 无线控制器的名称 - client_name_location", help="Client_name_location of WLC.")
+@click.option("--host", prompt="请输入访问 WLC 无线控制器的IP地址", help="host or IP of WLC.")
+@click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名", help="username of WLC.")
+@click.option("--password", prompt="请输入访问 WLC 无线控制器的密码", help="password of WLC.")
+@click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port", help="SSH port of WLC.")
+@click.option('--channel', type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入分析的频段")
+@click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值", help="Min RSSI of Rogue AP.")
 def init(client, host, username, password, port, channel, rssi):
     """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init"""
     _wlc = {}
@@ -113,9 +105,6 @@ def run():
         print("config.yml 不存在，please run it first: rogue init")
         return
 
-    now = datetime.now()
-    now_time = now.strftime("%Y%m%d-%H%M%S")
-
     global config
     with open('config.yml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -141,15 +130,18 @@ def run():
         print("没有 WLC 需要信息抓取，检查devices至少一个 WLC 里面：capture: yes")
         return
 
+    now = datetime.now()
+    now_time = now.strftime("%Y%m%d_%H%M%S")
+
     # Show command that we execute
     for name, device in _wlcs.items():
         with ConnectHandler(**device) as net_connect:
-            _folder = f'{FOLDER}/{name}_{device.get("host")}'
+            _folder = f'{FOLDER}/{name}_{device.get("host")}/{now_time}'
             if not os.path.exists(_folder):
                 os.makedirs(_folder)
             output = net_connect.send_command(CMD_ROGUE_SUMMARY)
             if config.get("write_file", True):
-                with open(f'{_folder}/{CMD_ROGUE_SUMMARY}_{now_time}.txt', "w") as file:
+                with open(f'{_folder}/{CMD_ROGUE_SUMMARY}.txt', "w") as file:
                     file.write(output)
             else:
                 print("Rogue ap summary file no need, write cancel")
@@ -177,7 +169,7 @@ def run():
                 _detail_str += "\n"
 
             if config.get("write_file", True):
-                with open(f'{_folder}/{CMD_ROGUE_DETAIL}_{now_time}.txt', "w") as file:
+                with open(f'{_folder}/{CMD_ROGUE_DETAIL}.txt', "w") as file:
                     file.write(_detail_str)
             else:
                 print("rogue ap detail file no need, write cancel")
@@ -187,7 +179,7 @@ def run():
             for i in config.get("commands", []):
                 _data = net_connect.send_command(i)
                 if config.get("write_file", True):
-                    with open(f'{_folder}/{i}_{now_time}.txt', "w") as file:
+                    with open(f'{_folder}/{i}.txt', "w") as file:
                         file.write(_data)
                 else:
                     print("commands file no need, write cancel")

@@ -64,7 +64,7 @@ def cli(ctx):
 @click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名", help="username of WLC.")
 @click.option("--password", prompt="请输入访问 WLC 无线控制器的密码", help="password of WLC.")
 @click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port", help="SSH port of WLC.")
-@click.option('--channel', type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入分析的频段")
+@click.option('--channel', default="5G", type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入无线信道频段")
 @click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值", help="Min RSSI of Rogue AP.")
 def init(client, host, username, password, port, channel, rssi):
     """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init"""

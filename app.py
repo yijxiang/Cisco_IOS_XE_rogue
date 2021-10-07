@@ -6,11 +6,12 @@ import click
 import yaml
 from netmiko import ConnectHandler
 
-
 CMD_ROGUE_SUMMARY = "show wireless wps rogue ap summary"
-CMD_LIST = ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 24ghz load-info",
-            "show ap dot11 5ghz load-info",
-            "show ap dot11 24ghz cleanair air-quality summary"]
+CMD_dict = {
+    "5G": ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 5ghz load-info", "show ap dot11 5ghz summary"],
+    "2.4G": ["show ap dot11 24ghz cleanair air-quality summary", "show ap dot11 24ghz load-info", "show ap dot11 24ghz summary"]
+}
+
 CMD_ROGUE_DETAIL = "show wireless wps rogue ap detailed"
 config = {}
 
@@ -90,7 +91,7 @@ def init(client, host, username, password, port, channel, rssi):
             "channels_24G": channels_24G,
             "rssi_min_dBm": rssi,
             "devices": _wlc,
-            "commands": CMD_LIST
+            "commands": CMD_dict
         }
     # print(_config)
     with open(f'config.yml', "w") as file:
@@ -176,7 +177,13 @@ def run():
                 # print(_detail_str)
 
             # run commands capture
-            for i in config.get("commands", []):
+            _commands_list = []
+            if config.get("channels_5G"):
+                _commands_list.extend(config["commands"]["5G"])
+            elif config.get("channels_24G"):
+                _commands_list.extend(config["commands"]["2.4G"])
+
+            for i in _commands_list:
                 _data = net_connect.send_command(i)
                 if config.get("write_file", True):
                     with open(f'{_folder}/{i}.txt', "w") as file:

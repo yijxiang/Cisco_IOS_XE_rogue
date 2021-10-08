@@ -2,7 +2,22 @@
 
 该工具软件仅仅是收集 Cisco Catalyst 9800 无线控制器，其运行 IOS XE 系列软件的 rogue AP list，帮助我们进行 *troubleshooting*
 
-该工具收集的命令输出，将保存在子目录 output 下，并在文件名字中包含抓取的日期和时间信息。
+该工具收集的命令输出，将保存在子目录 output 下，并在输出目录名称中包含抓取的日期和时间信息。
+
+该工具抓取的命令有：
+```
+  Rogue commands:
+  - show wireless wps rogue ap summary
+  - show wireless wps rogue ap detailed <mac address of rogue>
+  2.4G commands:
+  - show ap dot11 24ghz cleanair air-quality summary
+  - show ap dot11 24ghz load-info
+  - show ap dot11 24ghz summary
+  5G commands:
+  - show ap dot11 5ghz cleanair air-quality summary
+  - show ap dot11 5ghz load-info
+  - show ap dot11 5ghz summary
+```
 
 
 ### 工具软件使用方法

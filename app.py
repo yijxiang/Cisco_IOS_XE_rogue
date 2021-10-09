@@ -6,13 +6,26 @@ import click
 import yaml
 from netmiko import ConnectHandler
 
-CMD_ROGUE_SUMMARY = "show wireless wps rogue ap summary"
 CMD_dict = {
-    "5G": ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 5ghz load-info", "show ap dot11 5ghz summary"],
-    "2.4G": ["show ap dot11 24ghz cleanair air-quality summary", "show ap dot11 24ghz load-info", "show ap dot11 24ghz summary"]
+    "cisco_ios": {
+        "5G": ["show ap dot11 5ghz cleanair air-quality summary", "show ap dot11 5ghz load-info", "show ap dot11 5ghz summary"],
+        "2.4G": ["show ap dot11 24ghz cleanair air-quality summary", "show ap dot11 24ghz load-info", "show ap dot11 24ghz summary"]
+    },
+    "cisco_wlc_ssh": {
+        "5G": ["show 802.11a cleanair air-quality summary", "show advanced 802.11a summary"],
+        "2.4G": ["show 802.11b cleanair air-quality summary", "show advanced 802.11b summary"]
+    }
 }
 
-CMD_ROGUE_DETAIL = "show wireless wps rogue ap detailed"
+CMD_ROGUE_SUMMARY = {
+    "cisco_wlc_ssh": "show rogue ap summary",
+    "cisco_ios": "show wireless wps rogue ap summary"
+}
+
+CMD_ROGUE_DETAIL = {
+    "cisco_wlc_ssh": "show rogue ap detailed",
+    "cisco_ios": "show wireless wps rogue ap detailed"
+}
 config = {}
 
 # raw data folder
@@ -28,10 +41,37 @@ def show_wireless_wps_rogue_ap_summary_regex(data):
     found = re.findall(rogue_str, data)
     for i in found:
         rogue_ap_mac, rssi, channel = i
+        _channel = channel
+        if "," in channel:
+            _channel = channel.split("(")[1].split(",")[0]
+        if not _channel.isdigit():
+            continue
         _one_data = {
             "rogue_ap_mac": rogue_ap_mac,
             "rssi": int(rssi),
-            "channel": int(channel)
+            "channel": int(_channel)
+        }
+        _data.append(_one_data)
+    return _data
+
+
+def show_rogue_ap_summary_regex(data):
+    # print(data)
+    _data = []
+    mac = '[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}'
+    rogue_str = re.compile(r'''({m})\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(-\d+)+\s+(\S+)\s+'''.format(m=mac))
+    found = re.findall(rogue_str, data)
+    for i in found:
+        rogue_ap_mac, rssi, channel = i
+        _channel = channel
+        if "," in channel:
+            _channel = channel.split("(")[1].split(",")[0]
+        if not _channel.isdigit():
+            continue
+        _one_data = {
+            "rogue_ap_mac": rogue_ap_mac,
+            "rssi": int(rssi),
+            "channel": int(_channel)
         }
         _data.append(_one_data)
     return _data
@@ -64,10 +104,11 @@ def cli(ctx):
 @click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名", help="username of WLC.")
 @click.option("--password", prompt="请输入访问 WLC 无线控制器的密码", help="password of WLC.")
 @click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port", help="SSH port of WLC.")
-@click.option('--channel', default="5G", type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入无线信道频段")
+# @click.option('--channel', default="5G", type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入无线信道频段")
+@click.option('--device_type', default="ios", type=click.Choice(['ios', 'aireos']), prompt="请输入访问 WLC 无线控制器的 OS", help="运行OS选择方法：C9800=ios、35/55/85 WLC=aireos")
 @click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值", help="Min RSSI of Rogue AP.")
-def init(client, host, username, password, port, channel, rssi):
-    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init"""
+def init(client, host, username, password, port, rssi, device_type="ios", channel="5G"):
+    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
     _wlc = {}
     channels_5G = False
     channels_24G = False
@@ -79,12 +120,18 @@ def init(client, host, username, password, port, channel, rssi):
     elif channel == "2.4G":
         channels_24G = True
 
+    if device_type == "aireos":
+        _device_type = "cisco_wlc_ssh"
+    elif device_type == "ios":
+        _device_type = "cisco_ios"
+
     _wlc[client] = {
         "host": host,
         "username": username,
         "password": password,
         "port": port,
-        "capture": True
+        "capture": True,
+        "device_type": _device_type
     }
     _config = {
             "channels_5G": channels_5G,
@@ -103,15 +150,15 @@ def init(client, host, username, password, port, channel, rssi):
 def run():
     """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
     if not os.path.isfile('config.yml'):
-        print("config.yml 不存在，please run it first: rogue init")
+        print("config.yml 文件不存在，please run it first: rogue init")
         return
 
     global config
     with open('config.yml') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    if not config.get("channels_5G") and not config.get("channels_5G"):
-        print("至少需要一个频段：5G、2.4G。在 config.yml 中设置 channels_5G、channels_24G，其中一个是 yes or true")
+    if not config.get("channels_5G") and not config.get("channels_24G"):
+        print("至少需要一个频段 5G、2.4G：在 config.yml 中设置 channels_5G、channels_24G，其中一个是 yes or true")
         return
     if not isinstance(config.get("rssi_min_dBm"), int):
         print("rssi_min_dBm 需要设置为数值，比如：-80 ")
@@ -122,9 +169,7 @@ def run():
     _wlcs = {}
     for name, device in config["devices"].items():
         if device.get("capture"):
-            device.update({"device_type": "cisco_ios"})
             device.pop("capture")
-            # devices_list.append(device)
             _wlcs[name] = device
 
     if not _wlcs:
@@ -140,15 +185,20 @@ def run():
             _folder = f'{FOLDER}/{name}_{device.get("host")}/{now_time}'
             if not os.path.exists(_folder):
                 os.makedirs(_folder)
-            output = net_connect.send_command(CMD_ROGUE_SUMMARY)
+            output = net_connect.send_command(CMD_ROGUE_SUMMARY[device["device_type"]])
             if config.get("write_file", True):
-                with open(f'{_folder}/{CMD_ROGUE_SUMMARY}.txt', "w") as file:
+                with open(f'{_folder}/{CMD_ROGUE_SUMMARY[device["device_type"]]}.txt', "w") as file:
                     file.write(output)
             else:
                 print("Rogue ap summary file no need, write cancel")
                 # print(output)
 
-            channel = channel_5G_24G(show_wireless_wps_rogue_ap_summary_regex(output))
+            if device["device_type"] == "cisco_ios":
+                _summary = show_wireless_wps_rogue_ap_summary_regex(output)
+            elif device["device_type"] == "cisco_wlc_ssh":
+                _summary = show_rogue_ap_summary_regex(output)
+
+            channel = channel_5G_24G(_summary)
 
             _mac_list = []
             if config.get("channels_5G"):
@@ -165,12 +215,12 @@ def run():
             # print(f'拟抓取的 Rogue APs 个数： {len(_mac_list)}')
             _detail_str = ""
             for i in _mac_list:
-                _detail_str += f'-------- {CMD_ROGUE_DETAIL} {i} --------\n'
-                _detail_str += net_connect.send_command(f'{CMD_ROGUE_DETAIL} {i}')
+                _detail_str += f'-------- {CMD_ROGUE_DETAIL[device["device_type"]]} {i} --------\n'
+                _detail_str += net_connect.send_command(f'{CMD_ROGUE_DETAIL[device["device_type"]]} {i}')
                 _detail_str += "\n"
 
             if config.get("write_file", True):
-                with open(f'{_folder}/{CMD_ROGUE_DETAIL}.txt', "w") as file:
+                with open(f'{_folder}/{CMD_ROGUE_DETAIL[device["device_type"]]}.txt', "w") as file:
                     file.write(_detail_str)
             else:
                 print("rogue ap detail file no need, write cancel")
@@ -179,9 +229,9 @@ def run():
             # run commands capture
             _commands_list = []
             if config.get("channels_5G"):
-                _commands_list.extend(config["commands"]["5G"])
+                _commands_list.extend(config["commands"][device["device_type"]]["5G"])
             elif config.get("channels_24G"):
-                _commands_list.extend(config["commands"]["2.4G"])
+                _commands_list.extend(config["commands"][device["device_type"]]["2.4G"])
 
             for i in _commands_list:
                 _data = net_connect.send_command(i)
@@ -199,6 +249,7 @@ def run():
 
 cli.add_command(init)
 cli.add_command(run)
+
 
 if __name__ == '__main__':
     cli()

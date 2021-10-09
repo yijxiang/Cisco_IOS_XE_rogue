@@ -1,10 +1,10 @@
 ## Cisco_IOS_XE_rogue
 
-该工具软件仅仅是收集 Cisco Catalyst 9800 无线控制器，其运行 IOS XE 系列软件的 rogue AP list，帮助我们进行 *troubleshooting*
+该工具软件支持收集IOS XE 系列软件的 Cisco Catalyst 9800、 以及运行 aireos 的无线控制器产品，抓取 rogue AP 清单，帮助我们进行无线干扰的 *troubleshooting*
 
-该工具收集的命令输出，将保存在子目录 output 下，并在输出目录名称中包含抓取的日期和时间信息。
+该工具收集的命令输出，将保存在子目录 output 下，并在输出目录名称中包含抓取的日期、时间信息。
 
-该工具抓取的命令有：
+该工具抓取的命令有，通过修改config.yml文件，也可以按需增加其他的命令收集：
 ```
   Rogue commands:
   - show wireless wps rogue ap summary
@@ -19,6 +19,7 @@
   - show ap dot11 5ghz summary
 ```
 
+目前工具仅仅针对 **5G** 频段进行收集和分析。
 
 ### 工具软件使用方法
 
@@ -28,10 +29,10 @@
     在 config.yml 文件中，还可以自定义需要抓取的命令清单，可以在 commands 下方自行增加。
 - 运行 rogue 可执行文件即可，windows terminal下 *rogue*， MAC OS terminal下 *./rogue*；
 - 如果运行顺利，软件将在本地自动创建子目录 output ，仔细检查该目录下文件是否完整；
-- 压缩目录 output ，并发送给CSS。
+- 压缩打包子目录 **output** ，并发送给思科工程师。
 
 
-下面为MAC OS上，具体使用该工具软件的信息供大家参考：
+下面为MAC OS上，如何使用该工具软件，供大家参考，简单步骤有几步：
 - ./rogue init
 - cat config.yml
 - ./rogue 
@@ -49,8 +50,6 @@
 请输入rogue AP RSSI-dBm 最低值： [-80]: 
 ########################## MAC OS$ 
 ########################## MAC OS$ 
-########################## MAC OS$ ls
-config.yml		rogue
 ########################## MAC OS$ ls -l
 total 21584
 -rw-r--r--  1 staff  staff       167 Oct  6 11:35 config.yml
@@ -82,10 +81,18 @@ For WLC - test localhost, rogue AP count in channels 5G/2.4G: 22/347
 
 ###  其他有帮助的信息收集
 
-发送抓取文件同时，请登录至 WLC CLI下，获取下述命令输出，注意提前设置 terminal length 0、terminal width 511：
+发送抓取文件同时，请登录至 WLC CLI下，获取下述命令输出：
 
-- show tech wireless： 针对C9800 IOS XE设备
-- 
+针对 IOS XE c9800 无线控制器：
+
+- terminal length 0
+- terminal width 512
+- show tech wireless
+
+
+针对 AireOS WLC 无线控制器：
+- config paging disable
+- show run-config
 
 
 ### links

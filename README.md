@@ -4,22 +4,31 @@
 
 该工具收集的命令输出，将保存在子目录 output 下，并在输出目录名称中包含抓取的日期、时间信息。
 
-该工具抓取的命令有，通过修改config.yml文件，也可以按需增加其他的命令收集：
+该工具抓取的命令有，通过修改config.yml文件，也可以按需增加其他的命令收集。
+
+注意和你计划采集的设备类型有关系，如果你计划从Catalyst 9800里面采集数据，则选择在"cisco_ios"下面增加命令；如果是35/55/8500系列*AIREOS*的设备，则选"cisco_wlc_ssh":
+
 ```
-  Rogue commands:
-  - show wireless wps rogue ap summary
-  - show wireless wps rogue ap detailed <mac address of rogue>
-  2.4G commands:
-  - show ap dot11 24ghz cleanair air-quality summary
-  - show ap dot11 24ghz load-info
-  - show ap dot11 24ghz summary
-  5G commands:
-  - show ap dot11 5ghz cleanair air-quality summary
-  - show ap dot11 5ghz load-info
-  - show ap dot11 5ghz summary
+commands:
+  cisco_ios:
+    2.4G:
+    - show ap dot11 24ghz cleanair air-quality summary
+    - show ap dot11 24ghz load-info
+    - show ap dot11 24ghz summary
+    5G:
+    - show ap dot11 5ghz cleanair air-quality summary
+    - show ap dot11 5ghz load-info
+    - show ap dot11 5ghz summary
+  cisco_wlc_ssh:
+    2.4G:
+    - show 802.11b cleanair air-quality summary
+    - show advanced 802.11b summary
+    5G:
+    - show 802.11a cleanair air-quality summary
+    - show advanced 802.11a summary
 ```
 
-目前工具仅仅针对 **5G** 频段进行收集和分析。
+目前工具仅仅针对 **5G** 频段进行收集和分析，对 *2.4G* 暂不支持。
 
 ### 工具软件使用方法
 

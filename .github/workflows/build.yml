@@ -14,12 +14,12 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -D -c -n rogue -i resources/src.icns rogue.py && cd dist/ && zip -vr rogue.zip rogue/
+            CMD_BUILD: pyinstaller -D -c -n rogue -i resources/app.icns rogue.py && cd dist/ && zip -vr rogue.zip rogue/
             OUT_FILE_NAME: rogue.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
-            CMD_BUILD: pyinstaller -F -c -n rogue -i resources/src.ico rogue.py
+            CMD_BUILD: pyinstaller -F -c -n rogue -i resources/app.ico rogue.py
             OUT_FILE_NAME: rogue.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:

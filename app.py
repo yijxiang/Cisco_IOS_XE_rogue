@@ -6,9 +6,9 @@ import pandas as pd
 import yaml
 from netmiko import ConnectHandler
 
-from common import channel_5G_24G, co_channel_5G, adj_channel_5G
-from ios_xe import ios_rogue_data, ios_ap_data, ios_load_data, ios_clean_air_data, ios_summary_data, ios_version
-from wlc_ssh import wlc_ap_data, wlc_rogue_data, wlc_clean_air_data, wlc_summary_data, wlc_sysinfo
+from app.common import channel_5G_24G, co_channel_5G, adj_channel_5G
+from app.ios_xe import ios_rogue_data, ios_ap_data, ios_load_data, ios_clean_air_data, ios_summary_data, ios_version
+from app.wlc_ssh import wlc_ap_data, wlc_rogue_data, wlc_clean_air_data, wlc_summary_data, wlc_sysinfo
 
 cmd_dict = {
     "cisco_wlc_ssh": {

@@ -1,14 +1,9 @@
 import os
 from datetime import datetime
-
 import click
-import pandas as pd
 import yaml
 from netmiko import ConnectHandler
-
-from rogue.common import channel_5G_24G, co_channel_5G, adj_channel_5G
-from rogue.ios_xe import ios_rogue_data, ios_ap_data, ios_load_data, ios_clean_air_data, ios_summary_data, ios_version
-from rogue.wlc_ssh import wlc_ap_data, wlc_rogue_data, wlc_clean_air_data, wlc_summary_data, wlc_sysinfo
+import re
 
 cmd_dict = {
     "cisco_wlc_ssh": {
@@ -29,77 +24,67 @@ g_device_type = {
 }
 
 
-def rogue_channel_data_ios_5G(_load, _ap, _rogue):
-    _ap_ = {}
-    _load_ = {}
-    _rogue_ = []
-
-    for i in _load:
-        _load_[f'{i["ap_name"]}_{i["slot"]}'] = i
-    for i in _ap:
-        ap_key = f'{i["ap_name"]}_{i["slot"]}'
-        if ap_key in _load_.keys():
-            i.update(_load_[ap_key])
-            _ap_[ap_key] = i
-    for i in _rogue:
-        ap_key = f'{i["ap_name"]}_{i["slot"]}'
-        if ap_key in _ap_.keys():
-            i.update(_ap_[ap_key])
-            # Co/Adj. channel check
-            if co_channel_5G(_ap_[ap_key].get("channel"), i.get("rogue_channels")):
-                i["check_channel"] = "Co Channel"
-            elif adj_channel_5G(_ap_[ap_key].get("channel"), i.get("rogue_channels")):
-                i["check_channel"] = "Adjacent Channel"
-            else:
-                i["check_channel"] = ""
-
-            _rogue_.append(i)
-    return _rogue_
+def wlc_summary_data(data):
+    # print(data)
+    _data = []
+    mac = '[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}'
+    rogue_str = re.compile(r'''({m})\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(-\d+)+\s+(\S+)\s+'''.format(m=mac))
+    found = re.findall(rogue_str, data)
+    for i in found:
+        rogue_ap_mac, rssi, channel = i
+        _channel = channel
+        if "," in channel:
+            _channel = channel.split("(")[1].split(",")[0]
+        if not _channel.isdigit():
+            continue
+        _one_data = {
+            "rogue_ap_mac": rogue_ap_mac,
+            "rssi": int(rssi),
+            "channel": int(_channel)
+        }
+        _data.append(_one_data)
+    return _data
 
 
-def rogue_channel_data_wlc_5G(_ap, _rogue):
-    _ap_ = {}
-    _rogue_ = []
-
-    for i in _ap:
-        _ap_[i["ap_name"]] = i
-    for i in _rogue:
-        if i.get("ap_name") in _ap_.keys():
-            i.update(_ap_[i["ap_name"]])
-        # Co/Adj. channel check
-        if co_channel_5G(i.get("channel"), i.get("rogue_channels")):
-            i["check_channel"] = "Co Channel"
-        elif adj_channel_5G(i.get("channel"), i.get("rogue_channels")):
-            i["check_channel"] = "Adjacent Channel"
-        else:
-            i["check_channel"] = ""
-
-        _rogue_.append(i)
-    return _rogue_
+def ios_summary_data(data):
+    _data = []
+    mac = '[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}'
+    rogue_str = re.compile(r'''({m})\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(-\d+)+\s+(\d+)\s+'''.format(m=mac))
+    found = re.findall(rogue_str, data)
+    for i in found:
+        rogue_ap_mac, rssi, channel = i
+        _channel = channel
+        if "," in channel:
+            _channel = channel.split("(")[1].split(",")[0]
+        if not _channel.isdigit():
+            continue
+        _one_data = {
+            "rogue_ap_mac": rogue_ap_mac,
+            "rssi": int(rssi),
+            "channel": int(_channel)
+        }
+        _data.append(_one_data)
+    return _data
 
 
 data_f_map = {
-    "show ap dot11 5ghz cleanair air-quality summary": ios_clean_air_data,
-    "show ap dot11 24ghz cleanair air-quality summary": ios_clean_air_data,
-    "show 802.11a cleanair air-quality summary": wlc_clean_air_data,
-    "show ap dot11 5ghz load-info": ios_load_data,
-    "show ap dot11 24ghz load-info": ios_load_data,
-    "show ap dot11 5ghz summary": ios_ap_data,
-    "show ap dot11 24ghz summary": ios_ap_data,
-    "show advanced 802.11a summary": wlc_ap_data,
-    "show wireless wps rogue ap detailed": ios_rogue_data,
-    "show rogue ap detailed": wlc_rogue_data,
     "show rogue ap summary": wlc_summary_data,
-    "show wireless wps rogue ap summary": ios_summary_data,
-    "show version": ios_version,
-    "show sysinfo": wlc_sysinfo,
-    "cisco_ios": {
-        "5G": rogue_channel_data_ios_5G
-    },
-    "cisco_wlc_ssh": {
-        "5G": rogue_channel_data_wlc_5G
-    }
+    "show wireless wps rogue ap summary": ios_summary_data
 }
+
+
+def channel_5G_24G(data, rssi_min_dBm):
+    channel = {
+        "5G": [],
+        "24G": []
+    }
+    for one in data:
+        if one.get("rssi") >= rssi_min_dBm:
+            if one.get("channel") > 20:
+                channel["5G"].append(one)
+            else:
+                channel["24G"].append(one)
+    return channel
 
 
 @click.group(invoke_without_command=True)
@@ -178,15 +163,19 @@ def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _file_write):
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(_detail_str)
-    return data_f_map[_cmd](_detail_str)
+    return
 
 
-def one_command_data(_cmd, _netmiko, _folder, _file_write):
+def one_command_data(_cmd, _netmiko, _folder, _file_write, _need_result=False):
     output = _netmiko.send_command(_cmd)
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(output)
-    return data_f_map[_cmd](output)
+
+    if _need_result:
+        return data_f_map[_cmd](output)
+    else:
+        return
 
 
 @click.command()
@@ -231,7 +220,7 @@ def run():
                 os.makedirs(_folder)
 
             # -------------------------- 1: for rogue ap summary --------------------------
-            _summary = one_command_data(cmd_dict[device["device_type"]].get("rogue_summary"), net_connect, _folder, config.get("write_file", True))
+            _summary = one_command_data(cmd_dict[device["device_type"]].get("rogue_summary"), net_connect, _folder, config.get("write_file", True), True)
             channel = channel_5G_24G(_summary, config["rssi_min_dBm"])
 
             _mac_list = []
@@ -246,7 +235,7 @@ def run():
             # print(f'拟抓取的 Rogue APs 个数： {len(_mac_list)}')
 
             # -------------------------- 2: for rogue ap detailed --------------------------
-            _rogue_detail = rogue_detail(cmd_dict[device["device_type"]].get("rogue"), _mac_list, net_connect, _folder, config.get("write_file", True))
+            rogue_detail(cmd_dict[device["device_type"]].get("rogue"), _mac_list, net_connect, _folder, config.get("write_file", True))
             # print(f'rogue dtailed : {len(_rogue_detail)}')
             # print(_rogue_detail)
             # print(_rogue_detail)
@@ -263,46 +252,15 @@ def run():
 
             _data = {}
             for i in _commands_list:
-                _data[i] = one_command_data(i, net_connect, _folder, config.get("write_file", True))
+                one_command_data(i, net_connect, _folder, config.get("write_file", True))
 
-        # -------------------------- 4: data relationship and output to table --------------------------
-        rogue_ap_all = []
+        with open(f'{_folder}/captured datetime.txt', "w") as file:
+            file.write(f'{now.strftime("%Y%m%d_%H%M%S")}')
 
-        if device.get("device_type") == "cisco_ios":
-            _rogue = rogue_channel_data_ios_5G(_data.get("show ap dot11 5ghz load-info"),  _data.get("show ap dot11 5ghz summary"), _rogue_detail)
-        elif device.get("device_type") == "cisco_wlc_ssh":
-            _rogue = rogue_channel_data_wlc_5G(_data.get("show advanced 802.11a summary"), _rogue_detail)
-
-        for i in _rogue:
-            i.update({
-                "client_name": name,
-                "WLC_host": device.get("host"),
-                "captured_date": now.strftime("%Y-%m-%d %H:%M:%S")
-            })
-            rogue_ap_all.append(i)
-        # print(json.dumps(rogue_ap_all, indent=4))
-
-    # -------------------------- 5: final to csv --------------------------
-
-    # print(rogue_ap_all)
-    _header = []
-    _header_missing_data = []
-    for _c_name in ["rogue_mac", "rogue_ssid", "rogue_rssi", "ap_name", "check_channel",
-                    "channel", "rogue_channels", "channel_utilization", "clients", "txpwr", "client_name",
-                    "WLC_host", "captured_date"]:
-        if _c_name in rogue_ap_all[0].keys():
-            _header.append(_c_name)
-        else:
-            _header_missing_data.append(_c_name)
-    if _header_missing_data:
-        print(f'Missing data for this columns: {_header_missing_data}')
-    df = pd.DataFrame(rogue_ap_all)
-    df.sort_values(by=['rogue_rssi'], ascending=False).to_csv(
-        f'{FOLDER}/rogue ap {now.strftime("%Y%m%d-%H%M%S")}.csv', index=False, columns=_header)
-
-    print(
-        f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')
-    print(f"请检查子目录-{FOLDER} 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。")
+        print(
+            f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')
+        print(f"请检查子目录-{FOLDER} 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。")
+        print("成功运行，并已经保存文件................")
 
 
 if __name__ == '__main__':

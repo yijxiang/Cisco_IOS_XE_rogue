@@ -1,3 +1,14 @@
+## 请注意
+
+请先 clone 源代码使用。
+
+推荐的方法为：
+- 创建 virtual python 环境(3.8， 3.9)
+- pip install -r requirements.txt
+- ./rogue init
+- ./rogue
+
+
 ## Cisco_IOS_XE_rogue
 
 该工具软件支持收集IOS XE 系列软件的 Cisco Catalyst 9800、 以及运行 aireos 的无线控制器产品，抓取 rogue AP 清单，帮助我们进行无线干扰的 *troubleshooting*

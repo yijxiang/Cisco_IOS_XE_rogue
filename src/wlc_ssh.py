@@ -1,5 +1,4 @@
 from ttp import ttp
-from datetime import datetime
 from common import show_rogue_detail_ttp_cleanup, show_ap_clean_air_ttp_cleanup
 import re
 

@@ -104,7 +104,7 @@ def cli(ctx):
 @click.option('--device_type', default="ios", type=click.Choice(['ios', 'aireos']), prompt="请输入访问 WLC 无线控制器的 OS", help="运行OS选择方法：C9800=ios、35/55/85 WLC=aireos")
 @click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值", help="Min RSSI of Rogue AP.")
 def init(client, host, username, password, port, rssi, device_type="ios", channel="5G"):
-    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
+    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: collector init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
     _wlc = {}
     channels_5G = False
     channels_24G = False
@@ -149,7 +149,7 @@ def init(client, host, username, password, port, rssi, device_type="ios", channe
     # print(_config)
     with open(f'config.yml', "w") as file:
         yaml.dump(_config, file)
-        print("config.yml file created successfully, next step run command: rogue")
+        print("config.yml file created successfully, next step run command: collector")
     return
 
 
@@ -180,10 +180,10 @@ def one_command_data(_cmd, _netmiko, _folder, _file_write, _need_result=False):
 
 @click.command()
 def run():
-    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
+    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：collector 或者 collector run"""
     config = {}
     if not os.path.isfile('config.yml'):
-        print("config.yml 文件不存在，please run it first: rogue init")
+        print("config.yml 文件不存在，please run it first: collector init")
         return
 
     with open('config.yml') as f:

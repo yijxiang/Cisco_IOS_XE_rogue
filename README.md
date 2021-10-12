@@ -17,7 +17,7 @@
 该方法直接在目录 output 中 生成 *.CSV* 文件供参考。
 
 
-## 方法2： 先运行 collector mini 收集工具
+## 方法2： 运行 collector mini 收集工具 - 优势：已打包，不需要创建python环境
 
 该方法仅仅收集IOS XE 系列软件的 Cisco Catalyst 9800、 以及运行 aireos 的无线控制器产品，抓取 rogue AP 清单，帮助我们进行无线干扰的 *troubleshooting*。
 

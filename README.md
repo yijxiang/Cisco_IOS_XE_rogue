@@ -1,12 +1,18 @@
 ## 请注意
 
-请先 clone 源代码使用。
+请先 clone 源代码，init 之后，再使用。
 
 推荐的方法为：
+- git clone https://github.com/yijxiang/Cisco_IOS_XE_rogue.git
 - 创建 virtual python 环境(3.8， 3.9)
+  ```
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+  
 - pip install -r requirements.txt
-- ./rogue init
-- ./rogue
+- python rogue.py init
+- python rogue.py
 
 
 ## Cisco_IOS_XE_rogue

@@ -1,5 +1,5 @@
 from ttp import ttp
-from common import show_rogue_detail_ttp_cleanup, show_ap_dot11_x_summary_ttp_cleanup, show_ap_clean_air_ttp_cleanup, show_ap_load_ttp_cleanup
+from .common import show_rogue_detail_ttp_cleanup, show_ap_dot11_x_summary_ttp_cleanup, show_ap_clean_air_ttp_cleanup, show_ap_load_ttp_cleanup
 import re
 
 

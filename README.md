@@ -9,7 +9,6 @@
 注意和你计划采集的设备类型有关系，如果你计划从Catalyst 9800里面采集数据，则选择在"cisco_ios"下面增加命令；如果是35/55/8500系列*AIREOS*的设备，则选"cisco_wlc_ssh":
 
 ```
-commands:
   cisco_ios:
     2.4G:
     - show ap dot11 24ghz cleanair air-quality summary
@@ -19,6 +18,8 @@ commands:
     - show ap dot11 5ghz cleanair air-quality summary
     - show ap dot11 5ghz load-info
     - show ap dot11 5ghz summary
+    common:
+    - show version
   cisco_wlc_ssh:
     2.4G:
     - show 802.11b cleanair air-quality summary
@@ -26,6 +27,8 @@ commands:
     5G:
     - show 802.11a cleanair air-quality summary
     - show advanced 802.11a summary
+    common:
+    - show sysinfo
 ```
 
 目前工具仅仅针对 **5G** 频段进行收集和分析，对 *2.4G* 暂不支持。

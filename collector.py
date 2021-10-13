@@ -209,13 +209,13 @@ def run():
         return
 
     now = datetime.now()
-    # now_time = now.strftime("%Y%m%d_%H%M%S")
+    # now_time = now.strftime("%Y%m%d-%H%M%S")
     # now_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
     # Show command that we execute
     for name, device in _wlcs.items():
         with ConnectHandler(**device) as net_connect:
-            _folder = f'{FOLDER}/{name}_{device.get("host")}'
+            _folder = f'{FOLDER}/{name}_{device.get("host")}/{now.strftime("%Y%m%d-%H%M%S")}'
             if not os.path.exists(_folder):
                 os.makedirs(_folder)
 
@@ -254,8 +254,8 @@ def run():
             for i in _commands_list:
                 one_command_data(i, net_connect, _folder, config.get("write_file", True))
 
-        with open(f'{_folder}/captured datetime.txt', "w") as file:
-            file.write(f'{now.strftime("%Y%m%d_%H%M%S")}')
+        # with open(f'{_folder}/captured datetime.txt', "w") as file:
+        #     file.write(f'{now.strftime("%Y%m%d_%H%M%S")}')
 
         print(
             f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')

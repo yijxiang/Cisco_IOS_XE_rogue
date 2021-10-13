@@ -7,8 +7,9 @@ import yaml
 from netmiko import ConnectHandler
 
 from rogue.common import channel_5G_24G, co_channel_5G, adj_channel_5G
-from rogue.ios_xe import ios_rogue_data, ios_ap_data, ios_load_data, ios_clean_air_data, ios_summary_data, ios_version
-from rogue.wlc_ssh import wlc_ap_data, wlc_rogue_data, wlc_clean_air_data, wlc_summary_data, wlc_sysinfo
+from rogue.ios_xe import ios_rogue_data, ios_ap_data, ios_load_data, ios_clean_air_data, ios_summary_data, ios_version, \
+    ios_wlan_data
+from rogue.wlc_ssh import wlc_ap_data, wlc_rogue_data, wlc_clean_air_data, wlc_summary_data, wlc_sysinfo, wlc_wlan_data
 
 cmd_dict = {
     "cisco_wlc_ssh": {
@@ -79,25 +80,27 @@ def rogue_channel_data_wlc_5G(_ap, _rogue):
 
 
 data_f_map = {
-    "show ap dot11 5ghz cleanair air-quality summary": ios_clean_air_data,
-    "show ap dot11 24ghz cleanair air-quality summary": ios_clean_air_data,
-    "show 802.11a cleanair air-quality summary": wlc_clean_air_data,
-    "show ap dot11 5ghz load-info": ios_load_data,
-    "show ap dot11 24ghz load-info": ios_load_data,
-    "show ap dot11 5ghz summary": ios_ap_data,
-    "show ap dot11 24ghz summary": ios_ap_data,
-    "show advanced 802.11a summary": wlc_ap_data,
-    "show wireless wps rogue ap detailed": ios_rogue_data,
-    "show rogue ap detailed": wlc_rogue_data,
-    "show rogue ap summary": wlc_summary_data,
-    "show wireless wps rogue ap summary": ios_summary_data,
-    "show version": ios_version,
-    "show sysinfo": wlc_sysinfo,
     "cisco_ios": {
-        "5G": rogue_channel_data_ios_5G
+        "show wireless wps rogue ap summary": ios_summary_data,
+        "show wireless wps rogue ap detailed": ios_rogue_data,
+        "show ap dot11 5ghz cleanair air-quality summary": ios_clean_air_data,
+        "show ap dot11 24ghz cleanair air-quality summary": ios_clean_air_data,
+        "show ap dot11 5ghz load-info": ios_load_data,
+        "show ap dot11 24ghz load-info": ios_load_data,
+        "show ap dot11 5ghz summary": ios_ap_data,
+        "show ap dot11 24ghz summary": ios_ap_data,
+        "show version": ios_version,
+        "5G": rogue_channel_data_ios_5G,
+        "show wlan summary": ios_wlan_data
     },
     "cisco_wlc_ssh": {
-        "5G": rogue_channel_data_wlc_5G
+        "show 802.11a cleanair air-quality summary": wlc_clean_air_data,
+        "show advanced 802.11a summary": wlc_ap_data,
+        "show rogue ap detailed": wlc_rogue_data,
+        "show rogue ap summary": wlc_summary_data,
+        "show sysinfo": wlc_sysinfo,
+        "5G": rogue_channel_data_wlc_5G,
+        "show wlan summary": wlc_wlan_data
     }
 }
 
@@ -119,7 +122,7 @@ def cli(ctx):
 @click.option('--device_type', default="ios", type=click.Choice(['ios', 'aireos']), prompt="请输入访问 WLC 无线控制器的 OS", help="运行OS选择方法：C9800=ios、35/55/85 WLC=aireos")
 @click.option("--rssi", default=-80, prompt="请输入rogue AP RSSI-dBm 最低值", help="Min RSSI of Rogue AP.")
 def init(client, host, username, password, port, rssi, device_type="ios", channel="5G"):
-    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
+    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: rogue init。运行该命令，如果文件存在，则修改 config.yml文件；如果不存在，则创建文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
     _wlc = {}
     channels_5G = False
     channels_24G = False
@@ -162,13 +165,29 @@ def init(client, host, username, password, port, rssi, device_type="ios", channe
             "commands": all_commands_dict
         }
     # print(_config)
-    with open(f'config.yml', "w") as file:
-        yaml.dump(_config, file)
-        print("config.yml file created successfully, next step run command: rogue")
+    if not os.path.isfile('config.yml'):
+        # new config.yml file
+        with open(f'config.yml', "w") as file:
+            yaml.dump(_config, file)
+            print("config.yml file created successfully, next step run command: rogue")
+    else:
+        # modify the old config.yml file and make sure the new config refreshed
+        with open(f'config.yml', "r") as file:
+            _old_config = yaml.load(file, Loader=yaml.FullLoader)
+        _devices = _old_config.pop("devices")
+        _old_host = {v.get("host"): k for k, v in _devices.items()}
+        if host in _old_host.keys():
+            _devices.pop(_old_host.get(host))
+            _devices[client] = _wlc[client]
+        _config.pop("devices")
+        _config["devices"] = _devices
+        with open(f'config.yml', "w") as file:
+            yaml.dump(_config, file)
+            print("config.yml file changed successfully, please check sure this file correctly, then to run command: rogue")
     return
 
 
-def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _file_write):
+def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _device_type, _file_write=True):
     _detail_str = ""
     for i in _mac_list:
         _detail_str += f'-------- {_cmd} {i} --------\n\n'
@@ -178,35 +197,39 @@ def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _file_write):
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(_detail_str)
-    return data_f_map[_cmd](_detail_str)
+    return data_f_map[_device_type][_cmd](_detail_str)
 
 
-def one_command_data(_cmd, _netmiko, _folder, _file_write):
+def one_command_data(_cmd, _netmiko, _folder, _device_type, _file_write=True):
+    # all command functions
     output = _netmiko.send_command(_cmd)
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(output)
-    return data_f_map[_cmd](output)
+    return data_f_map[_device_type][_cmd](output)
 
 
 @click.command()
-def run():
-    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run"""
+@click.option('--conf', default="config.yml", prompt="please input the config filename", help="默认为 config.yml file，输入自定义配置文件")
+def run(conf):
+    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：rogue 或者 rogue run
+    如果config.yml中配置多个devices ，则全部抓取"""
     config = {}
-    if not os.path.isfile('config.yml'):
-        print("config.yml 文件不存在，please run it first: rogue init")
+    if not os.path.isfile(conf):
+        print(f"{conf} 文件不存在，please run it first: rogue init")
         return
 
-    with open('config.yml') as f:
+    with open(conf) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     if not config.get("channels_5G") and not config.get("channels_24G"):
-        print("至少需要一个频段 5G、2.4G：在 config.yml 中设置 channels_5G、channels_24G，其中一个是 yes or true")
+        print(f"至少需要一个频段 5G、2.4G：在 {conf} 中设置 channels_5G、channels_24G，其中一个是 yes or true")
         return
     if not isinstance(config.get("rssi_min_dBm"), int):
         print("rssi_min_dBm 需要设置为数值，其默认值为：-80 ")
         return
 
+    print("Start to collect.......")
     # add device type for consumed by netmiko
     # C9800 type: cisco_ios
     _wlcs = {}
@@ -224,14 +247,17 @@ def run():
     # now_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
     # Show command that we execute
+    rogue_ap_all = []
+    _header_list = []
     for name, device in _wlcs.items():
+        print(f'    start to collect info from device/host: {name}/{device.get("host")}')
         with ConnectHandler(**device) as net_connect:
             _folder = f'{FOLDER}/{name}_{device.get("host")}'
             if not os.path.exists(_folder):
                 os.makedirs(_folder)
 
             # -------------------------- 1: for rogue ap summary --------------------------
-            _summary = one_command_data(cmd_dict[device["device_type"]].get("rogue_summary"), net_connect, _folder, config.get("write_file", True))
+            _summary = one_command_data(cmd_dict[device["device_type"]].get("rogue_summary"), net_connect, _folder, device["device_type"], config.get("write_file", True))
             channel = channel_5G_24G(_summary, config["rssi_min_dBm"])
 
             _mac_list = []
@@ -246,7 +272,8 @@ def run():
             # print(f'拟抓取的 Rogue APs 个数： {len(_mac_list)}')
 
             # -------------------------- 2: for rogue ap detailed --------------------------
-            _rogue_detail = rogue_detail(cmd_dict[device["device_type"]].get("rogue"), _mac_list, net_connect, _folder, config.get("write_file", True))
+
+            _rogue_detail = rogue_detail(cmd_dict[device["device_type"]].get("rogue"), _mac_list, net_connect, _folder, device["device_type"], config.get("write_file", True))
             # print(f'rogue dtailed : {len(_rogue_detail)}')
             # print(_rogue_detail)
             # print(_rogue_detail)
@@ -263,10 +290,9 @@ def run():
 
             _data = {}
             for i in _commands_list:
-                _data[i] = one_command_data(i, net_connect, _folder, config.get("write_file", True))
+                _data[i] = one_command_data(i, net_connect, _folder, device["device_type"], config.get("write_file", True))
 
         # -------------------------- 4: data relationship and output to table --------------------------
-        rogue_ap_all = []
 
         if device.get("device_type") == "cisco_ios":
             _rogue = rogue_channel_data_ios_5G(_data.get("show ap dot11 5ghz load-info"),  _data.get("show ap dot11 5ghz summary"), _rogue_detail)
@@ -281,6 +307,10 @@ def run():
             })
             rogue_ap_all.append(i)
         # print(json.dumps(rogue_ap_all, indent=4))
+        print(
+            f'    For {name}/{device.get("host")}: rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')
+        print("    --------------------------------------------------")
+        _header_list.extend(rogue_ap_all[0].keys())
 
     # -------------------------- 5: final to csv --------------------------
 
@@ -290,7 +320,7 @@ def run():
     for _c_name in ["rogue_mac", "rogue_ssid", "rogue_rssi", "ap_name", "check_channel",
                     "channel", "rogue_channels", "channel_utilization", "clients", "txpwr", "client_name",
                     "WLC_host", "captured_date"]:
-        if _c_name in rogue_ap_all[0].keys():
+        if _c_name in list(set(_header_list)):
             _header.append(_c_name)
         else:
             _header_missing_data.append(_c_name)
@@ -300,8 +330,6 @@ def run():
     df.sort_values(by=['rogue_rssi'], ascending=False).to_csv(
         f'{FOLDER}/rogue ap {now.strftime("%Y%m%d-%H%M%S")}.csv', index=False, columns=_header)
 
-    print(
-        f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')
     print(f"请检查子目录-{FOLDER} 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。")
 
 

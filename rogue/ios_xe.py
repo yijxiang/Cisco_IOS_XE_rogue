@@ -130,3 +130,20 @@ def ios_xe(_ap, _load, _rogue, _clean_air):
         "rogue": _rogue_data,
         "clean_air": _clean_air_data
     }
+
+
+def ios_wlan_data(data):
+    ttp_template = """
+<group>
+id   profile_name                     ssid                             status security                            {{ _headers_ }}
+</group>"""
+    parser = ttp(data=data, template=ttp_template)
+    parser.parse()
+
+    _data = []
+    for i in parser.result()[0][0]:
+        if "UP" not in i.get("status"):
+            continue
+        i.pop("security")
+        _data.append(i)
+    return _data

@@ -25,7 +25,7 @@
 
 该工具已经预设了少量抓取的命令，通过修改config.yml文件，可以按需增加其他的命令收集。
 
-注意和你计划采集的设备类型有关系，如果你将从Catalyst 9800里面采集数据，则选择在"cisco_ios"下面增加命令；如果是35/55/8500系列*AIREOS*的设备，则选"cisco_wlc_ssh":
+注意和你计划采集的设备类型有关系，如果你将从Catalyst 9800里面采集数据，则选择在"cisco_ios"下面增加命令；如果是35/55/8500系列 *aireos* 的设备，则选"cisco_wlc_ssh":
 
 ```
 commands:
@@ -127,12 +127,26 @@ rssi_min_dBm: -80
 For WLC - demo localhost, rogue AP count in channels 5G/2.4G: 21/132
 请检查子目录-output 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。
 成功运行，并已经保存文件................
-(env)  ----------------MAC OS------$ 
+(env)  ----------------MAC OS------$ tree
+.
+├── collector
+├── config.yml
+└── output
+    └── demo_localhost
+        ├── captured\ datetime.txt
+        ├── show\ ap\ dot11\ 5ghz\ cleanair\ air-quality\ summary.txt
+        ├── show\ ap\ dot11\ 5ghz\ load-info.txt
+        ├── show\ ap\ dot11\ 5ghz\ summary.txt
+        ├── show\ version.txt
+        ├── show\ wireless\ wps\ rogue\ ap\ detailed.txt
+        ├── show\ wireless\ wps\ rogue\ ap\ summary.txt
+        └── show\ wlan\ summary.txt
 ```
 
 ###  其他有帮助的信息收集
 
-发送抓取文件同时，请登录至 WLC CLI下，获取下述命令输出：
+发送抓取文件同时，最好登录至 WLC CLI下，获取下述命令输出一起打包发出（文件较大，
+不建议使用上述工具抓取）：
 
 针对 IOS XE c9800 无线控制器：
 
@@ -141,7 +155,8 @@ For WLC - demo localhost, rogue AP count in channels 5G/2.4G: 21/132
 - show tech wireless
 
 
-针对 AireOS WLC 无线控制器：
+针对 aireos WLC 无线控制器：
+
 - config paging disable
 - show run-config
 

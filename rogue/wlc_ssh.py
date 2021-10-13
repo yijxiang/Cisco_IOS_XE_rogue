@@ -35,7 +35,7 @@ First Time Rogue was Reported.................... {{rogue_first_saw | ORPHRASE}}
         MAC Address.............................. {{ap_mac}}  
         Name..................................... {{ap_name}}
         Radio Type............................... {{radio_type | ORPHRASE}}
-        SSID..................................... {{rogue_ssid | ORPHRASE}}
+        SSID..................................... {{rogue_ssid | re(".*")}}
         Channel.................................. {{channel | ORPHRASE}}
         RSSI..................................... {{rogue_rssi | to_int}} dBm
         SNR...................................... {{rogue_snr | to_int}} dB
@@ -89,6 +89,27 @@ Licensing Type................................... {{license_type| ORPHRASE}}
     parser = ttp(data=data, template=ttp_template)
     parser.parse()
     return parser.result()[0][0]
+
+
+def wlc_wlan_data(data):
+    ttp_template = """
+<group>
+wlan_id  wlan_profile_name_ssid                                                   status    interface_name        pmipv6 {{ _headers_ }}
+</group>"""
+    parser = ttp(data=data, template=ttp_template)
+    parser.parse()
+
+    _data = []
+    for i in parser.result()[0][0]:
+        if "Enabled" not in i.get("status"):
+            continue
+        if " / " in i.get("wlan_profile_name_ssid"):
+            i["profile_name"], i["ssid"] = i.pop("wlan_profile_name_ssid").split(" / ")
+        i["id"] = i.pop("wlan_id")
+        i.pop("interface_name")
+        i.pop("pmipv6")
+        _data.append(i)
+    return _data
 
 
 def ap_ttp_cleanup(data):

@@ -74,6 +74,8 @@ def show_rogue_detail_ttp_cleanup(data):
                 _channel = one_ap.pop("channel")
                 if " " in _channel:
                     one_ap["rogue_channels"] = _channel.split()[0]
+                elif "MHz" in _channel:
+                    one_ap["rogue_channels"] = _channel.split("(")[0]
                 elif "(" in _channel:
                     one_ap["rogue_channels"] = _channel.split("(")[1].split(")")[0]
                 else:

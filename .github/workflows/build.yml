@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-18.04
             TARGET: ubuntu
             CMD_BUILD: pyinstaller -F -c -n collector -i resources/app.icns collector.py && cd dist/
             OUT_FILE_NAME: collector

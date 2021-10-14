@@ -12,10 +12,14 @@ jobs:
     strategy:
       matrix:
         include:
+          - os: ubuntu-latest
+            TARGET: ubuntu
+            CMD_BUILD: pyinstaller -F -c -n collector -i resources/app.icns collector.py && cd dist/
+            OUT_FILE_NAME: collector
           - os: macos-latest
             TARGET: macos
-            CMD_BUILD: pyinstaller -F -c -n collector -i resources/app.icns collector.py && cd dist/ && zip collector.zip collector
-            OUT_FILE_NAME: collector.zip
+            CMD_BUILD: pyinstaller -F -c -n collector -i resources/app.icns collector.py && cd dist/ && zip collector_macos.zip collector
+            OUT_FILE_NAME: collector_macos.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows

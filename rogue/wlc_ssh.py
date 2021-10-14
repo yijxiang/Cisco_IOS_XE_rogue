@@ -88,7 +88,7 @@ Licensing Type................................... {{license_type| ORPHRASE}}
 """
     parser = ttp(data=data, template=ttp_template)
     parser.parse()
-    return parser.result()[0][0]
+    return [parser.result()[0][0]]
 
 
 def wlc_wlan_data(data):

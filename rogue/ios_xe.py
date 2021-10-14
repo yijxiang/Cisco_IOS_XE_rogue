@@ -80,16 +80,16 @@ ap_name               channel    avg_aq  min_aq  interferers  spectrum_ap_type {
 def ios_version(data):
     ttp_template = """
 Cisco IOS XE Software, Version {{os_version}}
-{{hostname| ORPHRASE}} uptime is {{ignore| re(.*}}
+{{hostname| ORPHRASE}} uptime is {{ignore| re(".*")}}
 System restarted at {{restart_time| ORPHRASE}}
 Last reload reason: {{last_reset_reason| ORPHRASE}}
-License Level: {{license_level| ORPHRASE}}
+AIR License Level: {{license_level| ORPHRASE}}
 Smart Licensing Status: {{license_status| ORPHRASE}}
 Installation mode is {{install_mode}}
 """
     parser = ttp(data=data, template=ttp_template)
     parser.parse()
-    return parser.result()[0][0]
+    return [parser.result()[0][0]]
 
 
 def ios_rogue_data(data):

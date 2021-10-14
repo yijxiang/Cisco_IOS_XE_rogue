@@ -197,7 +197,10 @@ def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _device_type, _file_write=
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(_detail_str)
-    return data_f_map[_device_type][_cmd](_detail_str)
+    if _cmd in data_f_map[_device_type].keys():
+        return data_f_map[_device_type][_cmd](_detail_str)
+    else:
+        return []
 
 
 def one_command_data(_cmd, _netmiko, _folder, _device_type, _file_write=True):
@@ -206,7 +209,10 @@ def one_command_data(_cmd, _netmiko, _folder, _device_type, _file_write=True):
     if _file_write:
         with open(f'{_folder}/{_cmd}.txt', "w") as file:
             file.write(output)
-    return data_f_map[_device_type][_cmd](output)
+    if _cmd in data_f_map[_device_type].keys():
+        return data_f_map[_device_type][_cmd](output)
+    else:
+        return []
 
 
 @click.command()

@@ -19,6 +19,7 @@ channel_5G = {
     "132": 5660,
     "136": 5680,
     "140": 5700,
+    "143": 5716,
     "144": 5720,
     "149": 5745,
     "153": 5765,
@@ -31,36 +32,38 @@ channel_5G = {
 def co_channel_5G(ap_channel, rogue_channel):
     # print(ap_channel)
     # print(rogue_channel)
-    if ap_channel in rogue_channel:
-        return True
-    elif isinstance(ap_channel, list):
-        for ap in ap_channel:
-            if ap in rogue_channel:
-                return True
-    elif "," in ap_channel:
-        for ap in ap_channel.split(","):
-            if ap in rogue_channel:
-                return True
-    return False
+    if ap_channel and rogue_channel:
+        if ap_channel in rogue_channel:
+            return True
+        elif isinstance(ap_channel, list):
+            for ap in ap_channel:
+                if ap in rogue_channel:
+                    return True
+        elif "," in ap_channel:
+            for ap in ap_channel.split(","):
+                if ap in rogue_channel:
+                    return True
+        return False
 
 
 def adj_channel_5G(ap_channel, rogue_channel):
-    _ap = [int(i) for i in ap_channel.split(",")]
-    _rogue = [int(i) for i in rogue_channel.split(",")]
-    _ap_min = min(_ap)
-    _ap_max = max(_ap)
-    _rogue_min = min(_rogue)
-    _rogue_max = max(_rogue)
+    if ap_channel and rogue_channel:
+        _ap = [int(i) for i in ap_channel.split(",")]
+        _rogue = [int(i) for i in rogue_channel.split(",")]
+        _ap_min = min(_ap)
+        _ap_max = max(_ap)
+        _rogue_min = min(_rogue)
+        _rogue_max = max(_rogue)
 
-    if _ap_min > _rogue_max:
-        _delta = channel_5G[str(_ap_min)] - channel_5G[str(_rogue_max)]
-        if _delta >= 100:
-            return False
-    elif _ap_max < _rogue_min:
-        _delta = channel_5G[str(_rogue_min)] - channel_5G[str(_ap_max)]
-        if _delta >= 100:
-            return False
-    return True
+        if _ap_min > _rogue_max:
+            _delta = channel_5G[str(_ap_min)] - channel_5G[str(_rogue_max)]
+            if _delta >= 100:
+                return False
+        elif _ap_max < _rogue_min:
+            _delta = channel_5G[str(_rogue_min)] - channel_5G[str(_ap_max)]
+            if _delta >= 100:
+                return False
+        return True
 
 
 def show_rogue_detail_ttp_cleanup(data):
@@ -88,16 +91,20 @@ def show_rogue_detail_ttp_cleanup(data):
 def show_ap_dot11_x_summary_ttp_cleanup(data):
     _data_ = []
     for ap in data:
+        if "Monitor" in ap.get("mode"):
+            continue
         _state = ap.pop("state")
         if not ("ENABLED" == _state or "Enabled" == _state):
             continue
-        _txpwr = ap.pop("txpwr")
+        # _txpwr = ap.pop("txpwr")
         _channel = ap.pop("channel")
         ap["ap_mac"] = ap.pop("mac")
         # if "*" in _txpwr:
         #     ap["TPC"] = "*"
         # else:
         #     ap["TPC"] = ""
+        # ap["txpwr"] = int(_txpwr.split("(")[1].split()[0])
+
         # ap["DCA"] = _channel.split(")")[1]
         if "(Monitor)" in _channel:
             continue
@@ -107,7 +114,7 @@ def show_ap_dot11_x_summary_ttp_cleanup(data):
             ap["channel"] = _channel.split("*")[0]
         else:
             ap["channel"] = _channel
-        ap["txpwr"] = int(_txpwr.split("(")[1].split()[0])
+
         # ignore some data
         ap.pop("oper_state")
         ap.pop("width")

@@ -73,6 +73,13 @@ commands:
 - 检查output 子目录下自动保存的文件，以及该文件的时间戳
 
 
+Windows下的话：
+- cd 到文件目录中；
+- collector.exe init
+- collector.exe
+
+
+
 ```
 (env)  ----------------MAC OS------$ ./collector init
 请输入访问 WLC 无线控制器的名称 - client_name_location: demo

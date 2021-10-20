@@ -28,13 +28,14 @@ def show_rogue_detail_ttp(data):
     ttp_template = """
 <group>
 Rogue BSSID                            : {{rogue_mac}}
-Last heard Rogue SSID                  : {{rogue_ssid | ORPHRASE}}
+Last heard Rogue SSID                  : {{rogue_ssid | re(".*")}}
 State                                  : {{rogue_state}}
 First Time Rogue was Reported          : {{rogue_first_saw | ORPHRASE}}
 <group name="reported_ap*">
   AP Name : {{ap_name}}
     Detecting slot ID                  : {{slot}}
     Radio Type                         : {{radio_type | ORPHRASE}}
+    SSID                               : {{rogue_ssid | re(".*")}}
     Channel                            : {{channel | ORPHRASE}}
       Channels                         : {{rogue_channels | joinmatches(',')}}
     RSSI                               : {{rogue_rssi | to_int}} dBm
@@ -79,7 +80,7 @@ ap_name               channel    avg_aq  min_aq  interferers  spectrum_ap_type {
 
 def ios_version(data):
     ttp_template = """
-Cisco IOS XE Software, Version {{os_version}}
+Cisco IOS XE Software, Version {{os_version| ORPHRASE}}
 {{hostname| ORPHRASE}} uptime is {{ignore| re(".*")}}
 System restarted at {{restart_time| ORPHRASE}}
 Last reload reason: {{last_reset_reason| ORPHRASE}}
@@ -89,6 +90,7 @@ Installation mode is {{install_mode}}
 """
     parser = ttp(data=data, template=ttp_template)
     parser.parse()
+    # print(parser.result()[0][0])
     return [parser.result()[0][0]]
 
 
@@ -147,3 +149,4 @@ id   profile_name                     ssid                             status se
         i.pop("security")
         _data.append(i)
     return _data
+

@@ -73,11 +73,17 @@ commands:
 - 检查output 子目录下自动保存的文件，以及该文件的时间戳
 
 
-Windows下的话：
+如果使用Windows，CMD下：
+- cmd 回车，使用windows自带的cli；
 - cd 到文件目录中；
-- collector.exe init
-- collector.exe
+- collector.exe init    (说明：生成config.yml)
+- collector.exe         (说明：命令采集)
 
+如果使用Windows，powershell下：
+- powershell 回车，使用windows自带的cli；
+- cd 到文件目录中；
+- ./collector.exe init   (说明：生成config.yml)
+- ./collector.exe        (说明：命令采集)
 
 
 ```

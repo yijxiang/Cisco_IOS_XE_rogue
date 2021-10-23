@@ -1,12 +1,12 @@
-
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/yijxiang/Cisco_IOS_XE_rogue)
 
 ## What's Rogue AP python app
 
 [ 中文版本 ](README_chinese.md)
 
 The main goal of rogue.py app. is collecting all commands for rogue detection in Cisco WLC devices, and one snapshots of rogue ap report will be included as well:
-- collect the rogue commands for cisco wlc includes c9800 IOS XE devices and the old WLCs runs aireos system；
-- rogue ap snapshot report, export as CSV format；
+- collect the rogue commands for cisco wlc includes c9800 IOS XE devices and the old WLCs runs aireos system;
+- rogue ap snapshot report, export as CSV format;
 - Daily operation help for wireless troubleshooting;
 
 
@@ -15,8 +15,8 @@ The main goal of rogue.py app. is collecting all commands for rogue detection in
 Please git clone this repo and then run python application.
 
 Recommend steps for all python applications:
-- git clone https://github.com/yijxiang/Cisco_IOS_XE_rogue.git；
-- cd Cisco_IOS_XE_rogue；
+- git clone https://github.com/yijxiang/Cisco_IOS_XE_rogue.git;
+- cd Cisco_IOS_XE_rogue;
 - create virtual python env., version 3.8+/3.9+ have been tested
   ```
   python3 -m venv venv
@@ -40,10 +40,10 @@ Obviously Python do NOT need be installed, what we need do is only run the execu
 
 
 The mini collector tool collect information only：
-- support both IOS XE Cisco Catalyst 9800 and the old aireos WLC devices； 
-- Commands output will be saved in the folder name "output" and datetime subfolder； 
-- Pyinstaller used for package all python components, so it's easy to run in notebook specially for windows PC；
-- Couple of commands included in collector which help for our wireless trouble shooting；
+- support both IOS XE Cisco Catalyst 9800 and the old aireos WLC devices; 
+- Commands output will be saved in the folder name "output" and datetime subfolder; 
+- Pyinstaller used for package all python components, so it's easy to run in notebook specially for windows PC;
+- Couple of commands included in collector which help for our wireless trouble shooting;
 
 If you need more commands included for later analyse, please make sure add the extra commands in corresponding section of config.yml file.
 For example, if you run tools with IOS XE 9800, those commands should be added under "cisco_ios", otherwise, "cisco_wlc_ssh" will be the right section for your aireos WLCs.
@@ -158,8 +158,8 @@ rssi_min_dBm: -80
 
 (env)  ----------------MAC OS------$ ./collector 
 For WLC - demo localhost, rogue AP count in channels 5G/2.4G: 21/132
-请检查子目录-output 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。
-成功运行，并已经保存文件................
+请检查子目录-output 下,检查show命令输出文件是否生成,重复运行将覆盖目录下文件.
+成功运行,并已经保存文件................
 (env)  ----------------MAC OS------$ tree
 .
 ├── collector

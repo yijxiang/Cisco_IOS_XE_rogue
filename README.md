@@ -1,10 +1,23 @@
-## 请注意2种使用方法，方法1：直接使用rogue.app
 
-请先 clone 源代码，init 之后，再使用。
 
-推荐的方法为：
-- git clone https://github.com/yijxiang/Cisco_IOS_XE_rogue.git
-- 创建 virtual python 环境(3.8， 3.9)
+## What's Rogue AP python app
+
+[ 中文版本 ](README_chinese.md)
+
+The main goal of rogue.py app. is collecting all commands for rogue detection in Cisco WLC devices, and one snapshots of rogue ap report will be included as well:
+- collect the rogue commands for cisco wlc includes c9800 IOS XE devices and the old WLCs runs aireos system；
+- rogue ap snapshot report, export as CSV format；
+- Daily operation help for wireless troubleshooting;
+
+
+### How to use Rogue AP python app
+
+Please git clone this repo and then run python application.
+
+Recommend steps for all python applications:
+- git clone https://github.com/yijxiang/Cisco_IOS_XE_rogue.git；
+- cd Cisco_IOS_XE_rogue；
+- create virtual python env., version 3.8+/3.9+ have been tested
   ```
   python3 -m venv venv
   source venv/bin/activate
@@ -14,19 +27,28 @@
 - python rogue.py init
 - python rogue.py
 
-该方法直接在目录 output 中 生成 *.CSV* 文件供参考。
+
+After that, you can get the CSV file in output folder, include all raw commands output as well.
 
 
-## 方法2： 运行 collector mini 收集工具 - 优势：已打包，不需要创建python环境
 
-该方法仅仅收集IOS XE 系列软件的 Cisco Catalyst 9800、 以及运行 aireos 的无线控制器产品，抓取 rogue AP 清单，帮助我们进行无线干扰的 *troubleshooting*。
+## What's the mini collector tool 
 
-该工具收集的命令输出，将保存在子目录 output 下，并在输出目录名称中包含抓取的日期、时间信息。
+Why mini collector tool?
+If the python env. is not possible for the notebook run the tools on site, you can use mini tools which collect all rogue commands output only for offline use later.
+Obviously Python do NOT need be installed, what we need do is only run the executed file and get the result.
 
-该工具已经预设了少量抓取的命令，通过修改config.yml文件，可以按需增加其他的命令收集。
 
-注意和你计划采集的设备类型有关系，如果你将从Catalyst 9800里面采集数据，则选择在"cisco_ios"下面增加命令；如果是35/55/8500系列 *aireos* 的设备，则选"cisco_wlc_ssh":
+The mini collector tool collect information only：
+- support both IOS XE Cisco Catalyst 9800 and the old aireos WLC devices； 
+- Commands output will be saved in the folder name "output" and datetime subfolder； 
+- Pyinstaller used for package all python components, so it's easy to run in notebook specially for windows PC；
+- Couple of commands included in collector which help for our wireless trouble shooting；
 
+If you need more commands included for later analyse, please make sure add the extra commands in corresponding section of config.yml file.
+For example, if you run tools with IOS XE 9800, those commands should be added under "cisco_ios", otherwise, "cisco_wlc_ssh" will be the right section for your aireos WLCs.
+
+Below is the config.yml for commands list pre-included:
 ```
 commands:
   cisco_ios:
@@ -53,39 +75,37 @@ commands:
     - show wlan summary
 ```
 
-目前工具仅仅针对 **5G** 频段进行收集和分析，对 *2.4G* 暂不支持。
+> Tips: channels in 5G support only.
 
-### MiNi 工具软件使用方法
+### How to use the mini collector tool 
 
-自 github 右侧栏 releases 下载最新的软件，目前可以支持 MAC OS、windows 2种格式。
-- 下载软件至本地，windows系统请下载 *collector.exe*，MAC OS 则下载 *collector_macos.zip*，运行程序可能*稍等片刻*，主要是由于工具软件打包成一个文件，运行时需要解压缩到临时目录造成的延迟；
-- 在同一个目录中，该文件也可以通过命令 collector init 交互式生成，配置文件请参考 config_template.yml 文件说明；
-    在 config.yml 文件中，还可以自定义需要抓取的命令清单，可以在 commands 下方自行增加。
-- 运行 collector 可执行文件即可，windows terminal下 *collector*， MAC OS terminal下 *./collector*；
-- 如果运行顺利，软件将保存文件至 子目录 output ，仔细检查该目录下文件是否完整；
-- 压缩打包子目录 **output** ，并发送给思科工程师。
-
-
-下面为MAC OS上，如何使用该工具软件，供大家参考，简单步骤有几步：
-- ./collector init
-- cat config.yml
-- ./collector 
-- 检查output 子目录下自动保存的文件，以及该文件的时间戳
+As packaged into one file for different OS system, include windows, MAC OS and Ubuntu, you can download different file from release of this repo.
+- download file for your PC.
+  - Windows system: file name is  *collector.exe*
+  - MAC OS system: file name is  *collector_macos.zip*
+  - Ubuntu system: file name is collector
+- **collector init** used for create the config.yml file via interactive method
+- **collector** used for collect information from devices.
+- output folder will be used for raw data save.
+- Tar/Zip the output and send to cisco CSS.
 
 
-如果使用Windows，CMD下：
-- cmd 回车，使用windows自带的cli；
-- cd 到文件目录中；
-- collector.exe init    (说明：生成config.yml)
-- collector.exe         (说明：命令采集)
-
-如果使用Windows，powershell下：
-- powershell 回车，使用windows自带的cli；
-- cd 到文件目录中；
-- ./collector.exe init   (说明：生成config.yml)
-- ./collector.exe        (说明：命令采集)
+Keep it simple, for MAC OS ：
+- ./collector init: create config file
+- cat config.yml: make sure config file correctly
+- ./collector : run tool
+- Check the output folder.
 
 
+for windows, steps is ：
+- cmd, in windows terminal
+- collector init
+- check the config.yml
+- collector 
+- Check the output folder.
+
+
+Below is one example in MAC OS：
 ```
 (env)  ----------------MAC OS------$ ./collector init
 请输入访问 WLC 无线控制器的名称 - client_name_location: demo
@@ -156,24 +176,26 @@ For WLC - demo localhost, rogue AP count in channels 5G/2.4G: 21/132
         └── show\ wlan\ summary.txt
 ```
 
-###  其他有帮助的信息收集
+##  Recommend extra information
 
-发送抓取文件同时，最好登录至 WLC CLI下，获取下述命令输出一起打包发出（文件较大，
-不建议使用上述工具抓取）：
+In order to deep understanding the wireless config and status, please capture following command using your terminal:
 
-针对 IOS XE c9800 无线控制器：
+For IOS XE c9800：
 
 - terminal length 0
 - terminal width 512
 - show tech wireless
 
+> On IOS XE C9800, you can also capture commands from GUI: Troubleshooting -> debug bundle -> add new command "show tech wireless", you can download the result after finished.
 
-针对 aireos WLC 无线控制器：
+For aireos WLC：
 
 - config paging disable
 - show run-config
 
 
-### links
+## Ref. links
 
-- [ https://github.com/yijxiang/Cisco_IOS_XE_rogue： Rogue AP 信息收集](https://github.com/yijxiang/Cisco_IOS_XE_rogue/releases)
+- [ https://github.com/yijxiang/Cisco_IOS_XE_rogue ](https://github.com/yijxiang/Cisco_IOS_XE_rogue/releases)
+- [ Wireless Troubleshooting Tools ](https://developer.cisco.com/docs/wireless-troubleshooting-tools/#!wireless-troubleshooting-tools/wireless-troubleshooting-tools)
+- 

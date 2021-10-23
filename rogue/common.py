@@ -69,7 +69,8 @@ def adj_channel_5G(ap_channel, rogue_channel):
 def show_rogue_detail_ttp_cleanup(data):
     _data = []
     for rogue_ap in data:
-        rogue_ap.pop("rogue_state")
+        if "rogue_state" in rogue_ap.keys():
+            rogue_ap.pop("rogue_state")
         _reported_ap = rogue_ap.pop("reported_ap")
         for one_ap in _reported_ap:
             one_ap.pop("radio_type")

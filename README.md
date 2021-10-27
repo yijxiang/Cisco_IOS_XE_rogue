@@ -9,6 +9,9 @@ The main goal of rogue.py app. is collecting all commands for rogue detection in
 - rogue ap snapshot report, export as CSV format;
 - Daily operation help for wireless troubleshooting;
 
+One sample CSV Rogue report.
+![CSV snapshot report ](csv.jpg)
+
 
 ### How to use Rogue AP python app
 
@@ -198,4 +201,8 @@ For aireos WLC：
 
 - [ https://github.com/yijxiang/Cisco_IOS_XE_rogue ](https://github.com/yijxiang/Cisco_IOS_XE_rogue/releases)
 - [ Wireless Troubleshooting Tools ](https://developer.cisco.com/docs/wireless-troubleshooting-tools/#!wireless-troubleshooting-tools/wireless-troubleshooting-tools)
-- 
+- [ cisco-wlc-pythonizer ](https://developer.cisco.com/codeexchange/github/repo/consulttelecom/cisco-wlc-pythonizer)
+
+
+## License
+This project is covered under the terms described in  [ LICENSE ](LICENSE)

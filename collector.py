@@ -109,16 +109,18 @@ def cli(ctx):
 
 
 @click.command()
-@click.option("--client", prompt="请输入访问 WLC 无线控制器的名称 - client_name_location", help="Client_name_location of WLC.")
-@click.option("--host", prompt="请输入访问 WLC 无线控制器的IP地址 - IP or host of WLC", help="host or IP of WLC.")
-@click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名 - username", help="username of WLC.")
-@click.password_option(prompt="请输入访问 WLC 无线控制器的密码 - password", help="password of WLC.", confirmation_prompt=False)
-@click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 SSH port", help="SSH port of WLC.")
+@click.option("--client", prompt="请输入访问 WLC 无线控制器的名称 - please input the client_name_location", help="Client_name_location of WLC.")
+@click.option("--host", prompt="请输入访问 WLC 无线控制器的IP地址 - please input the IP or host of WLC", help="host or IP of WLC.")
+@click.option("--username", prompt="请输入访问 WLC 无线控制器的用户名 - please input the username", help="username of WLC.")
+@click.password_option(prompt="请输入访问 WLC 无线控制器的密码 - please input the password", help="password of WLC.", confirmation_prompt=False)
+@click.option("--port", default=22, prompt="请输入访问 WLC 无线控制器的 please input the SSH port", help="SSH port of WLC.")
 # @click.option('--channel', default="5G", type=click.Choice(['5G', '2.4G', 'all']), prompt="请输入无线信道频段")
-@click.option('--device_type', default="ios", type=click.Choice(['ios', 'aireos']), prompt="请输入访问 WLC 无线控制器的 OS", help="运行OS选择方法：C9800=ios、35/55/85 WLC=aireos")
-@click.option("--rssi", default=-80, prompt="请输入 - input rogue AP minimum RSSI in -dBm", help="Min RSSI of Rogue AP.")
+@click.option('--device_type', default="ios", type=click.Choice(['ios', 'aireos']), prompt="请输入访问 WLC 无线控制器OS please input the OS", help="运行OS选择方法：C9800=ios、35/55/85 WLC=aireos")
+@click.option("--rssi", default=-80, prompt="请输入 - please input rogue AP minimum RSSI in -dBm", help="Min RSSI of Rogue AP.")
 def init(client, host, username, password, port, rssi, device_type="ios", channel="5G"):
-    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: collector init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取"""
+    """ 步骤一：交互式生成 config.yml 文件，第一次使用请先运行命令: collector init，运行该命令，将删除同目录中的 config.yml文件。对于熟练使用者，可以直接修改config.yml实现多个控制器的信息获取
+        Step one: interactive create the config.yml file, please run : collector init, then the config.yml file will be created automatically in the folder
+    """
     _wlc = {}
     channels_5G = False
     channels_24G = False
@@ -194,7 +196,9 @@ def one_command_data(_cmd, _netmiko, _folder, _file_write, _need_result=False):
 
 @click.command()
 def run():
-    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：collector 或者 collector run"""
+    """ 步骤二：从无线控制器 - WLC 中抓取 Rogue AP 信息，命令格式可以是：collector 或者 collector run
+        Step two: run this command to capture all commands : collector
+    """
     config = {}
     if not os.path.isfile('config.yml'):
         print("config.yml 文件不存在，please run it first: collector init")
@@ -273,8 +277,8 @@ def run():
 
         print(
             f'For WLC - {name} {device.get("host")}, rogue AP count in channels 5G/2.4G: {len(channel.get("5G"))}/{len(channel.get("24G"))}')
-        print(f"请检查子目录-{FOLDER} 下，检查show命令输出文件是否生成，重复运行将覆盖目录下文件。")
-        print("成功运行，并已经保存文件................")
+        print(f"please check all output in the folder -{FOLDER} , you can repeat run it again")
+        print("Run finished successfully ................")
 
 
 if __name__ == '__main__':

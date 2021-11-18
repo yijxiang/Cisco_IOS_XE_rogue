@@ -177,7 +177,7 @@ def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _file_write):
         _detail_str += "\n"
 
     if _file_write:
-        with open(f'{_folder}/{_cmd}.txt', "w") as file:
+        with open(f'{_folder}/{_cmd}.txt', "w", encoding="utf-8") as file:
             file.write(_detail_str)
     return
 
@@ -185,7 +185,7 @@ def rogue_detail(_cmd, _mac_list, _netmiko,  _folder, _file_write):
 def one_command_data(_cmd, _netmiko, _folder, _file_write, _need_result=False):
     output = _netmiko.send_command(_cmd)
     if _file_write:
-        with open(f'{_folder}/{_cmd}.txt', "w") as file:
+        with open(f'{_folder}/{_cmd}.txt', "w", encoding="utf-8") as file:
             file.write(output)
 
     if _need_result:

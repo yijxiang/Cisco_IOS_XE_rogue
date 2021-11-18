@@ -195,6 +195,7 @@ For aireos WLC：
 
 - config paging disable
 - show run-config
+- Alternative method: using TFTP with “transfer upload data run-conf”
 
 
 ## Ref. links

@@ -13,7 +13,6 @@ or implied.
 """
 
 channel_5G = {
-    "1": 2412,
     "36": 5180,
     "40": 5200,
     "44": 5220,
@@ -33,14 +32,12 @@ channel_5G = {
     "132": 5660,
     "136": 5680,
     "140": 5700,
-    "143": 5716,
     "144": 5720,
     "149": 5745,
     "153": 5765,
     "157": 5785,
     "161": 5805,
-    "165": 5825,
-    "255": 10000
+    "165": 5825
 }
 
 
@@ -71,12 +68,18 @@ def adj_channel_5G(ap_channel, rogue_channel):
         _rogue_max = max(_rogue)
 
         if _ap_min > _rogue_max:
-            _delta = channel_5G[str(_ap_min)] - channel_5G[str(_rogue_max)]
-            if _delta >= 100:
+            if str(_ap_min) in channel_5G.keys() and str(_rogue_max) in channel_5G.keys():
+                _delta = channel_5G[str(_ap_min)] - channel_5G[str(_rogue_max)]
+                if _delta >= 100:
+                    return False
+            else:
                 return False
         elif _ap_max < _rogue_min:
-            _delta = channel_5G[str(_rogue_min)] - channel_5G[str(_ap_max)]
-            if _delta >= 100:
+            if str(_rogue_min) in channel_5G.keys() and str(_ap_max) in channel_5G.keys():
+                _delta = channel_5G[str(_rogue_min)] - channel_5G[str(_ap_max)]
+                if _delta >= 100:
+                    return False
+            else:
                 return False
         return True
 

@@ -61,6 +61,29 @@ First Time Rogue was Reported.................... {{rogue_first_saw | ORPHRASE}}
     return parser.result()[0][0]
 
 
+def wlc_ap_auto_rf_dot11_5g_ttp(data):
+    # For command :
+    ttp_template = """
+<group>
+AP Name.......................................... {{ap_name}}
+  Slot ID........................................ {{slot}}
+  Radio Type..................................... {{radio_type}}
+  Current TX/RX Band............................. 80211 {{current_radio_band}} band
+    Noise Profile................................ {{noise_profile}}
+<group name="noise*">
+    Channel {{channel}}.................................. {{noise_dbm | to_int}} dBm
+</group>
+    Interference Profile......................... {{interference_profile}}
+<group name="interference*">
+    Channel {{channel}}.................................. {{interference_dbm | to_int}} dBm @ {{interference_busy | to_int}} % busy
+</group>
+</group>
+"""
+    parser = ttp(data=data, template=ttp_template)
+    parser.parse()
+    return parser.result()[0][0]
+
+
 def ap_ttp(data):
     ttp_template = """
 <group>

@@ -62,6 +62,27 @@ First Time Rogue was Reported          : {{rogue_first_saw | ORPHRASE}}
     return parser.result()[0][0]
 
 
+def show_ap_auto_rf_dot11_5g_ttp(data):
+    # For command : show ap auto-rf dot11 5ghz
+    ttp_template = """
+<group>
+AP Name                                           : {{ap_name}}
+  Slot ID                                         : {{slot}}
+    Noise Profile                                 : {{noise_profile}}
+<group name="noise*">
+    Channel {{channel}}                                   : {{noise_dbm | to_int}} dBm
+</group>
+    Interference Profile                          : {{interference_profile}}
+<group name="interference*">
+    Channel {{channel}}                                   : {{interference_dbm | to_int}} dBm @ {{interference_busy | to_int}}% busy
+</group>
+</group>
+"""
+    parser = ttp(data=data, template=ttp_template)
+    parser.parse()
+    return parser.result()[0][0]
+
+
 def show_ap_dot11_x_summary_ttp(data):
     ttp_template = """
 <group>
